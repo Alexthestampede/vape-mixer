@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2d1b4e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a0f2e;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#ff6b9d;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ecdc4;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <rect width="192" height="192" fill="url(#bg)" rx="32"/>
+  
+  <!-- Bottle body -->
+  <rect x="66" y="50" width="60" height="100" fill="none" stroke="url(#accent)" stroke-width="4" rx="8"/>
+  
+  <!-- Bottle neck -->
+  <rect x="78" y="30" width="36" height="24" fill="none" stroke="url(#accent)" stroke-width="4" rx="4"/>
+  
+  <!-- Liquid layers -->
+  <rect x="70" y="130" width="52" height="16" fill="#ff6b9d" opacity="0.7" rx="2"/>
+  <rect x="70" y="106" width="52" height="24" fill="#ffe66d" opacity="0.5" rx="2"/>
+  <rect x="70" y="54" width="52" height="52" fill="#4ecdc4" opacity="0.4" rx="2"/>
+  
+  <!-- Bubbles -->
+  <circle cx="85" cy="70" r="4" fill="#fff" opacity="0.6"/>
+  <circle cx="105" cy="85" r="3" fill="#fff" opacity="0.5"/>
+  <circle cx="95" cy="110" r="2" fill="#fff" opacity="0.4"/>
+</svg>

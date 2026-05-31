@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#ff6b6b">
+    <title>Vape Mixer</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        :root {
+            --bg-gradient-start: #2d1b4e;
+            --bg-gradient-end: #1a0f2e;
+            --accent-pink: #ff6b9d;
+            --accent-cyan: #4ecdc4;
+            --accent-yellow: #ffe66d;
+            --accent-orange: #ff8b5c;
+            --text-main: #f0e6d2;
+            --text-muted: #b8a9c9;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start), var(--bg-gradient-end));
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            background: linear-gradient(45deg, var(--accent-pink), var(--accent-cyan), var(--accent-yellow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255, 107, 157, 0.3);
+            letter-spacing: 2px;
+        }
+
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--glass-border);
+            border-radius: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--text-main);
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .calc-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(45deg, var(--accent-pink), var(--accent-orange));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .calc-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 107, 157, 0.4);
+        }
+
+        .results {
+            margin-top: 25px;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--accent-cyan);
+        }
+
+        .result-item.flavor {
+            border-left-color: var(--accent-pink);
+        }
+
+        .result-item.pg {
+            border-left-color: var(--accent-yellow);
+        }
+
+        .result-item.vg {
+            border-left-color: var(--accent-cyan);
+        }
+
+        .result-label {
+            font-weight: 600;
+        }
+
+        .result-value {
+            color: var(--accent-cyan);
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        /* Bottle Visualization */
+        .bottle-container {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+        }
+
+        .bottle {
+            width: 120px;
+            height: 200px;
+            border: 3px solid var(--glass-border);
+            border-radius: 10px 10px 30px 30px;
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 
+                inset 0 0 20px rgba(255, 255, 255, 0.1),
+                0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .bottle-neck {
+            width: 40px;
+            height: 30px;
+            border: 3px solid var(--glass-border);
+            border-bottom: none;
+            border-radius: 8px 8px 0 0;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .liquid-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            transition: all 0.5s ease;
+        }
+
+        .liquid-flavor {
+            background: linear-gradient(180deg, rgba(255, 107, 157, 0.6), rgba(255, 107, 157, 0.8));
+        }
+
+        .liquid-pg {
+            background: linear-gradient(180deg, rgba(255, 230, 109, 0.3), rgba(255, 230, 109, 0.5));
+        }
+
+        .liquid-vg {
+            background: linear-gradient(180deg, rgba(78, 205, 196, 0.3), rgba(78, 205, 196, 0.5));
+        }
+
+        .bottle-label {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        /* Inventory Section */
+        .inventory-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .inventory-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .inventory-name {
+            font-weight: 600;
+        }
+
+        .inventory-amount {
+            color: var(--accent-cyan);
+            font-family: monospace;
+        }
+
+        .inventory-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            background: var(--accent-cyan);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        .btn-small.delete {
+            background: var(--accent-pink);
+        }
+
+        .add-inventory {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .add-inventory input {
+            flex: 1;
+        }
+
+        .add-inventory input[type="number"] {
+            flex: 0.5;
+        }
+
+        /* Steep Section */
+        .steep-item {
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--accent-yellow);
+        }
+
+        .steep-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .steep-date {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .steep-ready {
+            color: var(--accent-cyan);
+            font-weight: bold;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: var(--text-muted);
+        }
+
+        .tab.active {
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+            background: rgba(78, 205, 196, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Export/Import */
+        .data-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .data-btn {
+            padding: 12px 20px;
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 10px;
+            color: var(--accent-cyan);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .data-btn:hover {
+            background: var(--accent-cyan);
+            color: white;
+        }
+
+        /* Install Prompt */
+        .install-prompt {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--glass-bg);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .install-prompt.show {
+            display: block;
+        }
+
+        .install-btn {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: var(--accent-cyan);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            animation: fadeIn 0.5s ease forwards;
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 2rem; }
+            .card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Vape Mixer</h1>
+
+        <div class="tabs">
+            <div class="tab active" onclick="showTab('calculator')">🧮 Calculator</div>
+            <div class="tab" onclick="showTab('inventory')">📦 Inventory</div>
+            <div class="tab" onclick="showTab('steep')">⏰ Steeping</div>
+            <div class="tab" onclick="showTab('data')">💾 Data</div>
+        </div>
+
+        <!-- Calculator Tab -->
+        <div id="calculator" class="tab-content active">
+            <div class="card">
+                <div class="card-title">🧪 Mix Calculator</div>
+                
+                <div class="input-group">
+                    <label for="flavor-name">Flavor Name</label>
+                    <input type="text" id="flavor-name" placeholder="e.g., Strawberry Ripe">
+                </div>
+
+                <div class="input-group">
+                    <label for="flavor-percent">Flavor Percentage (%)</label>
+                    <input type="number" id="flavor-percent" placeholder="e.g., 5" min="0" max="50" step="0.1">
+                </div>
+
+                <div class="input-group">
+                    <label for="vg-percent">VG Percentage (%)</label>
+                    <input type="number" id="vg-percent" placeholder="e.g., 70" min="0" max="100" step="1">
+                </div>
+
+                <div class="input-group">
+                    <label for="total-ml">Total Volume (ml)</label>
+                    <input type="number" id="total-ml" placeholder="e.g., 60" min="1" step="1">
+                </div>
+
+                <button class="calc-btn" onclick="calculate()">Calculate Mix</button>
+
+                <!-- Bottle Visualization -->
+                <div class="bottle-container" id="bottle-container" style="display: none;">
+                    <div>
+                        <div class="bottle-neck"></div>
+                        <div class="bottle" id="bottle">
+                            <div class="bottle-label" id="bottle-label">60ml</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="results" id="results" style="display: none;">
+                    <div class="result-item flavor">
+                        <span class="result-label">🍓 Flavor</span>
+                        <span class="result-value" id="flavor-result">0ml / 0g</span>
+                    </div>
+                    <div class="result-item pg">
+                        <span class="result-label">💧 PG</span>
+                        <span class="result-value" id="pg-result">0ml / 0g</span>
+                    </div>
+                    <div class="result-item vg">
+                        <span class="result-label">🫗 VG</span>
+                        <span class="result-value" id="vg-result">0ml / 0g</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; display: none;" id="steep-section">
+                    <label>Steep Duration</label>
+                    <select id="steep-days">
+                        <option value="0">No steep</option>
+                        <option value="1">1 day</option>
+                        <option value="3">3 days</option>
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                        <option value="30">30 days</option>
+                    </select>
+                    <button class="calc-btn" style="margin-top: 15px;" onclick="addToSteep()">Add to Steeping</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventory" class="tab-content">
+            <div class="card">
+                <div class="card-title">📦 Inventory</div>
+                <div class="inventory-list" id="inventory-list">
+                    <!-- Inventory items will be loaded here -->
+                </div>
+                <div class="add-inventory">
+                    <input type="text" id="inv-name" placeholder="Name">
+                    <input type="number" id="inv-amount" placeholder="ml">
+                    <select id="inv-type">
+                        <option value="flavor">Flavor</option>
+                        <option value="pg">PG Base</option>
+                        <option value="vg">VG Base</option>
+                    </select>
+                    <button class="btn-small" onclick="addInventory()">Add</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Steeping Tab -->
+        <div id="steep" class="tab-content">
+            <div class="card">
+                <div class="card-title">⏰ Steeping</div>
+                <div id="steep-list">
+                    <!-- Steep items will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tab -->
+        <div id="data" class="tab-content">
+            <div class="card">
+                <div class="card-title">💾 Backup & Restore</div>
+                <p style="margin-bottom: 20px; color: var(--text-muted);">
+                    Export your data to CSV for backup, or import previously saved data.
+                </p>
+                <div class="data-actions">
+                    <button class="data-btn" onclick="exportData()">📤 Export CSV</button>
+                    <button class="data-btn" onclick="document.getElementById('import-file').click()">📥 Import CSV</button>
+                    <input type="file" id="import-file" accept=".csv" style="display: none;" onchange="importData(event)">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Install Prompt -->
+    <div class="install-prompt" id="install-prompt">
+        <div>📱 Add Vape Mixer to your home screen?</div>
+        <button class="install-btn" onclick="installPWA()">Install</button>
+        <button class="install-btn" style="background: transparent; border: 1px solid var(--text-muted);" onclick="dismissInstall()">Not now</button>
+    </div>
+
+    <script>
+        // Storage keys
+        const STORAGE_KEYS = {
+            INVENTORY: 'vape_inventory',
+            STEEPING: 'vape_steeping',
+            CALC_HISTORY: 'vape_calc_history'
+        };
+
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'inventory') loadInventory();
+            if (tabName === 'steep') loadSteeping();
+        }
+
+        // Calculator
+        function calculate() {
+            const flavorPercent = parseFloat(document.getElementById('flavor-percent').value) || 0;
+            const vgPercent = parseFloat(document.getElementById('vg-percent').value) || 0;
+            const totalMl = parseFloat(document.getElementById('total-ml').value) || 0;
+
+            if (!totalMl || vgPercent > 100 || vgPercent < 0) {
+                alert('Please enter valid values');
+                return;
+            }
+
+            const pgPercent = 100 - vgPercent - flavorPercent;
+            
+            if (pgPercent < 0) {
+                alert('Flavor + VG percentage exceeds 100%');
+                return;
+            }
+
+            const flavorMl = (flavorPercent / 100) * totalMl;
+            const vgMl = (vgPercent / 100) * totalMl;
+            const pgMl = (pgPercent / 100) * totalMl;
+
+            // Conversions (approximate densities)
+            const flavorG = flavorMl * 1.05; // Flavor concentrates slightly denser
+            const vgG = vgMl * 1.26; // VG density
+            const pgG = pgMl * 1.04; // PG density
+
+            document.getElementById('flavor-result').textContent = 
+                `${flavorMl.toFixed(1)}ml / ${flavorG.toFixed(1)}g`;
+            document.getElementById('pg-result').textContent = 
+                `${pgMl.toFixed(1)}ml / ${pgG.toFixed(1)}g`;
+            document.getElementById('vg-result').textContent = 
+                `${vgMl.toFixed(1)}ml / ${vgG.toFixed(1)}g`;
+
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('steep-section').style.display = 'block';
+            document.getElementById('bottle-container').style.display = 'flex';
+            document.getElementById('bottle-label').textContent = `${totalMl}ml`;
+
+            // Update bottle visualization
+            updateBottle(flavorPercent, pgPercent, vgPercent);
+        }
+
+        function updateBottle(flavorPercent, pgPercent, vgPercent) {
+            const bottle = document.getElementById('bottle');
+            
+            // Clear existing layers
+            const existingLayers = bottle.querySelectorAll('.liquid-layer');
+            existingLayers.forEach(l => l.remove());
+
+            // Create layers from bottom up (flavor at bottom)
+            let currentBottom = 0;
+
+            if (flavorPercent > 0) {
+                const flavorLayer = document.createElement('div');
+                flavorLayer.className = 'liquid-layer liquid-flavor';
+                flavorLayer.style.height = `${flavorPercent}%`;
+                flavorLayer.style.bottom = '0';
+                bottle.appendChild(flavorLayer);
+                currentBottom += flavorPercent;
+            }
+
+            if (pgPercent > 0) {
+                const pgLayer = document.createElement('div');
+                pgLayer.className = 'liquid-layer liquid-pg';
+                pgLayer.style.height = `${pgPercent}%`;
+                pgLayer.style.bottom = `${currentBottom}%`;
+                bottle.appendChild(pgLayer);
+                currentBottom += pgPercent;
+            }
+
+            if (vgPercent > 0) {
+                const vgLayer = document.createElement('div');
+                vgLayer.className = 'liquid-layer liquid-vg';
+                vgLayer.style.height = `${vgPercent}%`;
+                vgLayer.style.bottom = `${currentBottom}%`;
+                bottle.appendChild(vgLayer);
+            }
+        }
+
+        // Inventory Management
+        function loadInventory() {
+            const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
+            const list = document.getElementById('inventory-list');
+            
+            if (inventory.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No items in inventory</p>';
+                return;
+            }
+
+            list.innerHTML = inventory.map((item, index) => `
+                <div class="inventory-item">
+                    <div>
+                        <span class="inventory-name">${item.name}</span>
+                        <span style="color: var(--text-muted); font-size: 0.8rem;">(${item.type})</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="inventory-amount">${item.amount}ml</span>
+                        <div class="inventory-actions">
+                            <button class="btn-small" onclick="editInventory(${index}, -10)">-10</button>
+                            <button class="btn-small delete" onclick="deleteInventory(${index})">×</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addInventory() {
+            const name = document.getElementById('inv-name').value.trim();
+            const amount = parseFloat(document.getElementById('inv-amount').value);
+            const type = document.getElementById('inv-type').value;
+
+            if (!name || !amount) {
+                alert('Please enter name and amount');
+                return;
+            }
+
+            const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
+            inventory.push({ name, amount, type });
+            localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(inventory));
+
+            document.getElementById('inv-name').value = '';
+            document.getElementById('inv-amount').value = '';
+            loadInventory();
+        }
+
+        function editInventory(index, change) {
+            const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
+            inventory[index].amount = Math.max(0, inventory[index].amount + change);
+            localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(inventory));
+            loadInventory();
+        }
+
+        function deleteInventory(index) {
+            const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
+            inventory.splice(index, 1);
+            localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(inventory));
+            loadInventory();
+        }
+
+        // Steeping
+        function addToSteep() {
+            const flavorName = document.getElementById('flavor-name').value.trim() || 'Unnamed Mix';
+            const days = parseInt(document.getElementById('steep-days').value);
+            
+            if (days === 0) return;
+
+            const steeping = JSON.parse(localStorage.getItem(STORAGE_KEYS.STEEPING) || '[]');
+            const readyDate = new Date();
+            readyDate.setDate(readyDate.getDate() + days);
+            
+            steeping.push({
+                name: flavorName,
+                startDate: new Date().toISOString(),
+                readyDate: readyDate.toISOString(),
+                days: days
+            });
+            
+            localStorage.setItem(STORAGE_KEYS.STEEPING, JSON.stringify(steeping));
+            alert('Added to steeping!');
+            
+            showTab('steep');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab')[2].classList.add('active');
+        }
+
+        function loadSteeping() {
+            const steeping = JSON.parse(localStorage.getItem(STORAGE_KEYS.STEEPING) || '[]');
+            const list = document.getElementById('steep-list');
+            const now = new Date();
+            
+            if (steeping.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No mixes steeping</p>';
+                return;
+            }
+
+            list.innerHTML = steeping.map((item, index) => {
+                const readyDate = new Date(item.readyDate);
+                const isReady = now >= readyDate;
+                const daysLeft = Math.ceil((readyDate - now) / (1000 * 60 * 60 * 24));
+                
+                return `
+                    <div class="steep-item" style="${isReady ? 'border-left-color: var(--accent-cyan);' : ''}">
+                        <div class="steep-name">${item.name}</div>
+                        <div class="steep-date">
+                            ${isReady ? 
+                                '<span class="steep-ready">✨ Ready to vape!</span>' : 
+                                `Ready in ${daysLeft} day${daysLeft !== 1 ? 's' : ''} (${readyDate.toLocaleDateString()})`
+                            }
+                        </div>
+                        <button class="btn-small delete" style="margin-top: 10px;" onclick="deleteSteep(${index})">Remove</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function deleteSteep(index) {
+            const steeping = JSON.parse(localStorage.getItem(STORAGE_KEYS.STEEPING) || '[]');
+            steeping.splice(index, 1);
+            localStorage.setItem(STORAGE_KEYS.STEEPING, JSON.stringify(steeping));
+            loadSteeping();
+        }
+
+        // Export/Import
+        function exportData() {
+            const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
+            const steeping = JSON.parse(localStorage.getItem(STORAGE_KEYS.STEEPING) || '[]');
+            
+            let csv = 'Type,Name,Amount_ml,Ready_Date\n';
+            
+            inventory.forEach(item => {
+                csv += `Inventory,${item.name},${item.amount},\n`;
+            });
+            
+            steeping.forEach(item => {
+                csv += `Steeping,${item.name},,${item.readyDate}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vape-mixer-backup-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const lines = text.split('\n');
+                    
+                    // Parse CSV
+                    const inventory = [];
+                    const steeping = [];
+                    
+                    for (let i = 1; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line) continue;
+                        
+                        const parts = line.split(',');
+                        if (parts.length >= 3) {
+                            const type = parts[0];
+                            const name = parts[1];
+                            const amount = parts[2];
+                            const readyDate = parts[3];
+                            
+                            if (type === 'Inventory') {
+                                inventory.push({ name, amount: parseFloat(amount) || 0, type: 'flavor' });
+                            } else if (type === 'Steeping') {
+                                steeping.push({ 
+                                    name, 
+                                    startDate: new Date().toISOString(),
+                                    readyDate: readyDate || new Date().toISOString(),
+                                    days: 7
+                                });
+                            }
+                        }
+                    }
+
+                    if (confirm(`Import ${inventory.length} inventory items and ${steeping.length} steeping items? This will REPLACE your current data.`)) {
+                        localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(inventory));
+                        localStorage.setItem(STORAGE_KEYS.STEEPING, JSON.stringify(steeping));
+                        alert('Data imported successfully!');
+                    }
+                } catch (err) {
+                    alert('Error importing file: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // PWA Install
+        let deferredPrompt;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('install-prompt').classList.add('show');
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('install-prompt').classList.remove('show');
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('install-prompt').classList.remove('show');
+        }
+
+        // Initialize
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed:', err));
+        }
+
+        // Check steeping items daily
+        setInterval(() => {
+            if (document.getElementById('steep').classList.contains('active')) {
+                loadSteeping();
+            }
+        }, 60000);
+    </script>
+</body>
+</html>
