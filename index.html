@@ -607,26 +607,26 @@
             const vgPercent = parseFloat(document.getElementById('vg-percent').value) || 0;
             const totalMl = parseFloat(document.getElementById('total-ml').value) || 0;
 
-            if (!totalMl || vgPercent > 100 || vgPercent < 0) {
+            if (!totalMl || vgPercent > 100 || vgPercent < 0 || flavorPercent < 0) {
                 alert('Please enter valid values');
                 return;
             }
 
-            const pgPercent = 100 - vgPercent - flavorPercent;
+            // New calculation: Flavor + Base (which is VG/PG mix)
+            // Example: 100ml bottle, 10% flavor, 70/30 VG/PG base
+            // = 10ml flavor + 90ml base (63ml VG, 27ml PG)
             
-            if (pgPercent < 0) {
-                alert('Flavor + VG percentage exceeds 100%');
-                return;
-            }
-
             const flavorMl = (flavorPercent / 100) * totalMl;
-            const vgMl = (vgPercent / 100) * totalMl;
-            const pgMl = (pgPercent / 100) * totalMl;
+            const baseMl = totalMl - flavorMl; // The remaining liquid
+            const pgPercent = 100 - vgPercent; // PG is the remainder of the base
+            
+            const vgMl = (vgPercent / 100) * baseMl;
+            const pgMl = (pgPercent / 100) * baseMl;
 
             // Conversions (approximate densities)
-            const flavorG = flavorMl * 1.05; // Flavor concentrates slightly denser
-            const vgG = vgMl * 1.26; // VG density
-            const pgG = pgMl * 1.04; // PG density
+            const flavorG = flavorMl * 1.05;
+            const vgG = vgMl * 1.26;
+            const pgG = pgMl * 1.04;
 
             document.getElementById('flavor-result').textContent = 
                 `${flavorMl.toFixed(1)}ml / ${flavorG.toFixed(1)}g`;
@@ -640,8 +640,11 @@
             document.getElementById('bottle-container').style.display = 'flex';
             document.getElementById('bottle-label').textContent = `${totalMl}ml`;
 
-            // Update bottle visualization
-            updateBottle(flavorPercent, pgPercent, vgPercent);
+            // For visualization, show actual percentages in final mix
+            const actualFlavorPercent = (flavorMl / totalMl) * 100;
+            const actualPgPercent = (pgMl / totalMl) * 100;
+            const actualVgPercent = (vgMl / totalMl) * 100;
+            updateBottle(actualFlavorPercent, actualPgPercent, actualVgPercent);
         }
 
         function updateBottle(flavorPercent, pgPercent, vgPercent) {
@@ -692,15 +695,16 @@
             }
 
             list.innerHTML = inventory.map((item, index) => `
-                <div class="inventory-item">
+                <div class="inventory-item" data-index="${index}">
                     <div>
                         <span class="inventory-name">${item.name}</span>
                         <span style="color: var(--text-muted); font-size: 0.8rem;">(${item.type})</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <span class="inventory-amount">${item.amount}ml</span>
+                        <span class="inventory-amount" id="inv-amount-${index}">${item.amount}ml</span>
                         <div class="inventory-actions">
-                            <button class="btn-small" onclick="editInventory(${index}, -10)">-10</button>
+                            <input type="number" id="inv-subtract-${index}" placeholder="ml" style="width: 60px; padding: 5px; border-radius: 4px; border: 1px solid var(--glass-border); background: rgba(0,0,0,0.3); color: var(--text-main);">
+                            <button class="btn-small" onclick="subtractFromInventory(${index})">−</button>
                             <button class="btn-small delete" onclick="deleteInventory(${index})">×</button>
                         </div>
                     </div>
@@ -730,6 +734,21 @@
         function editInventory(index, change) {
             const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
             inventory[index].amount = Math.max(0, inventory[index].amount + change);
+            localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(inventory));
+            loadInventory();
+        }
+
+        function subtractFromInventory(index) {
+            const input = document.getElementById(`inv-subtract-${index}`);
+            const amount = parseFloat(input.value);
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount to subtract');
+                return;
+            }
+
+            const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
+            inventory[index].amount = Math.max(0, inventory[index].amount - amount);
             localStorage.setItem(STORAGE_KEYS.INVENTORY, JSON.stringify(inventory));
             loadInventory();
         }
