@@ -2,7 +2,7 @@
   "name": "Vape Mixer",
   "short_name": "VapeMixer",
   "description": "Cozy vape juice mixing calculator with inventory and steep tracking",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#2d1b4e",
   "theme_color": "#ff6b6b",
