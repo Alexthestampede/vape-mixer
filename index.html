@@ -305,6 +305,37 @@
             font-weight: bold;
         }
 
+        /* Recipe Section */
+        .recipe-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--accent-pink);
+        }
+
+        .recipe-info {
+            flex: 1;
+        }
+
+        .recipe-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .recipe-details {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .recipe-actions {
+            display: flex;
+            gap: 8px;
+        }
+
         /* Tabs */
         .tabs {
             display: flex;
@@ -411,6 +442,7 @@
 
         <div class="tabs">
             <div class="tab active" onclick="showTab('calculator')">🧮 Calculator</div>
+            <div class="tab" onclick="showTab('recipes')">📝 Recipes</div>
             <div class="tab" onclick="showTab('inventory')">📦 Inventory</div>
             <div class="tab" onclick="showTab('steep')">⏰ Steeping</div>
             <div class="tab" onclick="showTab('data')">💾 Data</div>
@@ -478,7 +510,18 @@
                         <option value="14">14 days</option>
                         <option value="30">30 days</option>
                     </select>
-                    <button class="calc-btn" style="margin-top: 15px;" onclick="addToSteep()">Add to Steeping</button>
+                    <button class="calc-btn" style="margin-top: 15px;" onclick="saveRecipe()">💾 Save Recipe</button>
+                    <button class="calc-btn" style="margin-top: 10px;" onclick="addToSteep()">Add to Steeping</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recipes Tab -->
+        <div id="recipes" class="tab-content">
+            <div class="card">
+                <div class="card-title">📝 Saved Recipes</div>
+                <div id="recipes-list">
+                    <!-- Recipes will be loaded here -->
                 </div>
             </div>
         </div>
@@ -541,7 +584,8 @@
         const STORAGE_KEYS = {
             INVENTORY: 'vape_inventory',
             STEEPING: 'vape_steeping',
-            CALC_HISTORY: 'vape_calc_history'
+            CALC_HISTORY: 'vape_calc_history',
+            RECIPES: 'vape_recipes'
         };
 
         // Tab switching
@@ -554,6 +598,7 @@
             
             if (tabName === 'inventory') loadInventory();
             if (tabName === 'steep') loadSteeping();
+            if (tabName === 'recipes') loadRecipes();
         }
 
         // Calculator
@@ -759,19 +804,117 @@
             loadSteeping();
         }
 
+        // Recipes
+        function saveRecipe() {
+            const flavorName = document.getElementById('flavor-name').value.trim();
+            const flavorPercent = parseFloat(document.getElementById('flavor-percent').value) || 0;
+            const vgPercent = parseFloat(document.getElementById('vg-percent').value) || 0;
+            const totalMl = parseFloat(document.getElementById('total-ml').value) || 0;
+
+            if (!flavorName || !totalMl) {
+                alert('Please enter a flavor name and calculate first');
+                return;
+            }
+
+            const recipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECIPES) || '[]');
+            
+            // Check for duplicate names
+            const existingIndex = recipes.findIndex(r => r.name === flavorName);
+            if (existingIndex >= 0) {
+                if (!confirm(`Recipe "${flavorName}" already exists. Overwrite?`)) {
+                    return;
+                }
+                recipes[existingIndex] = {
+                    name: flavorName,
+                    flavorPercent,
+                    vgPercent,
+                    totalMl,
+                    savedAt: new Date().toISOString()
+                };
+            } else {
+                recipes.push({
+                    name: flavorName,
+                    flavorPercent,
+                    vgPercent,
+                    totalMl,
+                    savedAt: new Date().toISOString()
+                });
+            }
+            
+            localStorage.setItem(STORAGE_KEYS.RECIPES, JSON.stringify(recipes));
+            alert('Recipe saved!');
+        }
+
+        function loadRecipe(index) {
+            const recipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECIPES) || '[]');
+            const recipe = recipes[index];
+            
+            if (!recipe) return;
+
+            document.getElementById('flavor-name').value = recipe.name;
+            document.getElementById('flavor-percent').value = recipe.flavorPercent;
+            document.getElementById('vg-percent').value = recipe.vgPercent;
+            document.getElementById('total-ml').value = recipe.totalMl;
+
+            // Switch to calculator tab
+            showTab('calculator');
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab')[0].classList.add('active');
+            
+            // Recalculate
+            calculate();
+        }
+
+        function deleteRecipe(index) {
+            const recipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECIPES) || '[]');
+            recipes.splice(index, 1);
+            localStorage.setItem(STORAGE_KEYS.RECIPES, JSON.stringify(recipes));
+            loadRecipes();
+        }
+
+        function loadRecipes() {
+            const recipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECIPES) || '[]');
+            const list = document.getElementById('recipes-list');
+            
+            if (recipes.length === 0) {
+                list.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No saved recipes yet. Calculate a mix and save it!</p>';
+                return;
+            }
+
+            list.innerHTML = recipes.map((recipe, index) => `
+                <div class="recipe-item">
+                    <div class="recipe-info">
+                        <div class="recipe-name">${recipe.name}</div>
+                        <div class="recipe-details">
+                            ${recipe.flavorPercent}% flavor • ${recipe.vgPercent}% VG • ${recipe.totalMl}ml
+                        </div>
+                    </div>
+                    <div class="recipe-actions">
+                        <button class="btn-small" onclick="loadRecipe(${index})">Load</button>
+                        <button class="btn-small delete" onclick="deleteRecipe(${index})">×</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
         // Export/Import
         function exportData() {
             const inventory = JSON.parse(localStorage.getItem(STORAGE_KEYS.INVENTORY) || '[]');
             const steeping = JSON.parse(localStorage.getItem(STORAGE_KEYS.STEEPING) || '[]');
+            const recipes = JSON.parse(localStorage.getItem(STORAGE_KEYS.RECIPES) || '[]');
             
-            let csv = 'Type,Name,Amount_ml,Ready_Date\n';
+            let csv = 'Type,Name,Amount_ml,Ready_Date,Flavor_Percent,VG_Percent,Total_Ml\n';
             
             inventory.forEach(item => {
-                csv += `Inventory,${item.name},${item.amount},\n`;
+                csv += `Inventory,${item.name},${item.amount},,,,\n`;
             });
             
             steeping.forEach(item => {
-                csv += `Steeping,${item.name},,${item.readyDate}\n`;
+                csv += `Steeping,${item.name},,${item.readyDate},,,\n`;
+            });
+            
+            recipes.forEach(item => {
+                csv += `Recipe,${item.name},,,,${item.flavorPercent},${item.vgPercent},${item.totalMl}\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv' });
