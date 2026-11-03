@@ -36,7 +36,8 @@
             color: var(--text-main);
             min-height: 100vh;
             padding: 20px;
-            line-height: 1.6;
+            font-size: 17px;
+            line-height: 1.7;
         }
 
         .container {
@@ -219,7 +220,7 @@
             bottom: 10px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: var(--text-muted);
             background: rgba(0, 0, 0, 0.5);
             padding: 2px 8px;
@@ -263,7 +264,7 @@
             border-radius: 6px;
             color: white;
             cursor: pointer;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
         }
 
         .btn-small.delete {
@@ -701,7 +702,7 @@
                 <div class="inventory-item" data-index="${index}">
                     <div>
                         <span class="inventory-name">${item.name}</span>
-                        <span style="color: var(--text-muted); font-size: 0.8rem;">(${item.type})</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">(${item.type})</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 10px;">
                         <span class="inventory-amount" id="inv-amount-${index}">${item.amount}ml</span>
