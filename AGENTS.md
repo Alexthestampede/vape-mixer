@@ -54,6 +54,10 @@ git push
 
 Wait 1-2 minutes for Pages update after push.
 
+GitHub rejects pushes whose commits use a private email. This repo's local git identity is set to the
+account's noreply address (`41976031+Alexthestampede@users.noreply.github.com`); keep it that way or
+pushes will fail with `GH007`.
+
 ## Testing Locally
 
 ```bash
